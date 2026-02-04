@@ -1,0 +1,70 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Data for the computation cost chart
+phases = ['Setup\nPhase', 'MD\nRegistration', 'GWN Reg\n(per MD)',
+          'SN\nRegistration', 'GWN Reg\n(per SN)', 'Authentication\nPhase', 'Total\nProtocol']
+
+# Costs in milliseconds (ms)
+costs = [0.36, 0.044, 0.045, 0.41, 0.045, 0.606, 1.15]
+
+# Entity-wise breakdown for authentication phase (detailed view)
+auth_breakdown_labels = ['MD Operations', 'GWN Operations', 'SN Operations', 'Total Auth']
+auth_breakdown_costs = [0.174, 0.05, 0.382, 0.606]
+
+# Colors for the main bar chart
+colors = ['#2E86AB', '#A23B72', '#F18F01', '#C73E1D', '#6A994E', '#5F0F40', '#0F4C5C']
+
+# Create figure with two subplots
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 7), gridspec_kw={'width_ratios': [2, 1]})
+
+# Main bar chart - All phases
+bars = ax1.bar(phases, costs, color=colors, edgecolor='black', linewidth=1.2)
+ax1.set_title('Computation Cost of Proposed Protocol Phases\n(in milliseconds)', fontsize=14, fontweight='bold', pad=20)
+ax1.set_ylabel('Time (ms)', fontsize=12)
+ax1.set_xlabel('Protocol Phases', fontsize=12)
+ax1.grid(axis='y', alpha=0.3, linestyle='--')
+
+# Add value labels on top of bars
+for bar in bars:
+    height = bar.get_height()
+    ax1.text(bar.get_x() + bar.get_width()/2., height + 0.01,
+             f'{height:.3f}', ha='center', va='bottom', fontsize=9, fontweight='bold')
+
+# Authentication phase breakdown (pie chart)
+explode = (0.05, 0.05, 0.05, 0.1)  # explode the "Total" slice
+wedge_colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4']
+wedges, texts, autotexts = ax2.pie(auth_breakdown_costs, explode=explode, labels=auth_breakdown_labels,
+                                    colors=wedge_colors, autopct='%1.1f%%', startangle=90,
+                                    textprops={'fontsize': 10})
+ax2.set_title('Authentication Phase Cost Breakdown\n(per entity)', fontsize=12, fontweight='bold', pad=20)
+
+# Make the pie chart look nicer
+for autotext in autotexts:
+    autotext.set_color('white')
+    autotext.set_fontweight('bold')
+
+# Add overall comparison annotation
+fig.text(0.5, 0.02,
+         f'Total Protocol Cost: {sum(costs[:-1]):.2f} ms (excluding setup) | {costs[-1]:.2f} ms (with setup)',
+         ha='center', fontsize=11, fontweight='bold', style='italic',
+         bbox=dict(boxstyle="round,pad=0.5", facecolor="#F0F0F0", edgecolor="gray"))
+
+# Entity performance comparison (as a small inset or separate visualization)
+entity_labels = ['Gateway (GWN)', 'Mobile (MD)', 'Sensor (SN)']
+entity_speeds = [0.008, 0.042, 0.075]  # SHA-256 hash time in ms (from benchmark)
+
+# Add a small bar chart as inset for entity comparison
+inset_ax = fig.add_axes([0.75, 0.6, 0.15, 0.25])  # [left, bottom, width, height]
+entity_colors = ['#4A90E2', '#50C878', '#FF6B6B']
+inset_bars = inset_ax.bar(entity_labels, entity_speeds, color=entity_colors, edgecolor='black')
+inset_ax.set_title('SHA-256 Hash Time\nby Entity (ms)', fontsize=9, fontweight='bold')
+inset_ax.set_ylabel('Time (ms)', fontsize=8)
+inset_ax.tick_params(axis='x', rotation=15, labelsize=8)
+inset_ax.tick_params(axis='y', labelsize=8)
+
+# Add value labels on inset bars
+for bar in inset_bars:
+    height = bar.get_height()
+    inset_ax.text(bar.get_x() + bar.get_width()/2., height + 0.001,
+                  f'{height:.3f}', ha='center', va='bottom', fontsize=8, fontweight='bold')

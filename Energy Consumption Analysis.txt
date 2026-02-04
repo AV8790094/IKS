@@ -1,0 +1,160 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Energy consumption data (in micro-Joules)
+entities = ['Mobile Device (MD)', 'Gateway Node (GWN)', 'Sensor Node (SN)']
+total_energy = [82.2, 173.9, 1410.2]
+
+# Breakdown of energy components
+md_breakdown = {
+    'Computation (66.0 µJ)': 66.0,
+    'Transmission (8.2 µJ)': 8.2,
+    'Reception (8.0 µJ)': 8.0
+}
+
+gwn_breakdown = {
+    'Computation (153.0 µJ)': 153.0,
+    'Transmission (12.6 µJ)': 12.6,
+    'Reception (8.3 µJ)': 8.3
+}
+
+sn_breakdown = {
+    'Computation (1394.0 µJ)': 1394.0,
+    'Transmission (10.6 µJ)': 10.6,
+    'Reception (5.6 µJ)': 5.6
+}
+
+# Comparative data with other schemes
+schemes = ['Proposed', 'Kumari et al.', 'Alasmary et al.', 'Sharma et al.', 'Yuan et al.']
+md_comparison = [82.2, 245.6, 158.4, 112.8, 96.5]
+sn_comparison = [1410.2, 4215.8, 2850.2, 1980.5, 1650.8]
+total_comparison = [1666.3, 4875.4, 3274.6, 2315.3, 1895.3]
+
+# Energy distribution percentages
+md_percentages = [80.3, 10.0, 9.7]  # Computation, Transmission, Reception
+gwn_percentages = [88.0, 7.2, 4.8]
+sn_percentages = [98.8, 0.8, 0.4]
+
+# Create figure with multiple subplots
+fig, axes = plt.subplots(2, 3, figsize=(18, 12))
+fig.suptitle('Energy Consumption Analysis of Proposed Authentication Protocol',
+             fontsize=18, fontweight='bold', y=0.98)
+
+# 1. Main bar chart - Total energy by entity
+ax1 = axes[0, 0]
+colors = ['#4A90E2', '#50C878', '#FF6B6B']
+bars1 = ax1.bar(entities, total_energy, color=colors, edgecolor='black', linewidth=2)
+ax1.set_title('Total Energy Consumption by Entity\n(micro-Joules)', fontsize=14, fontweight='bold', pad=15)
+ax1.set_ylabel('Energy (µJ)', fontsize=12)
+ax1.set_xlabel('Entity', fontsize=12)
+ax1.grid(axis='y', alpha=0.3, linestyle='--')
+ax1.set_yscale('log')  # Log scale due to large differences
+
+# Add value labels
+for bar, energy in zip(bars1, total_energy):
+    ax1.text(bar.get_x() + bar.get_width()/2., bar.get_height() * 1.1,
+             f'{energy:.1f} µJ',
+             ha='center', va='bottom', fontsize=10, fontweight='bold')
+
+# 2. MD energy breakdown (stacked bar)
+ax2 = axes[0, 1]
+md_components = list(md_breakdown.keys())
+md_energies = list(md_breakdown.values())
+colors_md = ['#2E59A7', '#6C8EBF', '#95B8D9']
+bars_md = ax2.bar(md_components, md_energies, color=colors_md, edgecolor='black', linewidth=1.5)
+ax2.set_title('MD Energy Breakdown\n(micro-Joules)', fontsize=14, fontweight='bold', pad=15)
+ax2.set_ylabel('Energy (µJ)', fontsize=12)
+ax2.tick_params(axis='x', rotation=10)
+ax2.grid(axis='y', alpha=0.3, linestyle='--')
+
+for bar, energy in zip(bars_md, md_energies):
+    ax2.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 2,
+             f'{energy:.1f} µJ\n({energy/sum(md_energies)*100:.1f}%)',
+             ha='center', va='bottom', fontsize=9, fontweight='bold')
+
+# 3. SN energy breakdown (stacked bar)
+ax3 = axes[0, 2]
+sn_components = list(sn_breakdown.keys())
+sn_energies = list(sn_breakdown.values())
+colors_sn = ['#C73E1D', '#E57A57', '#F2A28C']
+bars_sn = ax3.bar(sn_components, sn_energies, color=colors_sn, edgecolor='black', linewidth=1.5)
+ax3.set_title('SN Energy Breakdown\n(micro-Joules)', fontsize=14, fontweight='bold', pad=15)
+ax3.set_ylabel('Energy (µJ)', fontsize=12)
+ax3.tick_params(axis='x', rotation=10)
+ax3.grid(axis='y', alpha=0.3, linestyle='--')
+
+for bar, energy in zip(bars_sn, sn_energies):
+    ax3.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 20,
+             f'{energy:.1f} µJ\n({energy/sum(sn_energies)*100:.1f}%)',
+             ha='center', va='bottom', fontsize=9, fontweight='bold')
+
+# 4. Energy distribution pie chart
+ax4 = axes[1, 0]
+entity_labels = ['MD (82.2 µJ)', 'GWN (173.9 µJ)', 'SN (1410.2 µJ)']
+entity_energies = total_energy
+entity_colors = ['#4A90E2', '#50C878', '#FF6B6B']
+wedges, texts, autotexts = ax4.pie(entity_energies, labels=entity_labels, colors=entity_colors,
+                                   autopct='%1.1f%%', startangle=90, textprops={'fontsize': 10})
+ax4.set_title('Protocol Energy Distribution\nby Entity', fontsize=14, fontweight='bold', pad=15)
+
+for autotext in autotexts:
+    autotext.set_color('white')
+    autotext.set_fontweight('bold')
+
+# 5. Comparative analysis - Mobile Device
+ax5 = axes[1, 1]
+x_pos = np.arange(len(schemes))
+width = 0.35
+
+bars_md_comp = ax5.bar(x_pos - width/2, md_comparison, width, label='Mobile Device', color='#4A90E2', edgecolor='black')
+bars_sn_comp = ax5.bar(x_pos + width/2, sn_comparison, width, label='Sensor Node', color='#FF6B6B', edgecolor='black')
+
+ax5.set_title('Energy Comparison with Related Schemes\n(MD vs SN)', fontsize=14, fontweight='bold', pad=15)
+ax5.set_xlabel('Authentication Scheme', fontsize=12)
+ax5.set_ylabel('Energy (µJ)', fontsize=12)
+ax5.set_xticks(x_pos)
+ax5.set_xticklabels(schemes, rotation=15)
+ax5.legend()
+ax5.grid(axis='y', alpha=0.3, linestyle='--')
+ax5.set_yscale('log')
+
+# Highlight proposed scheme
+ax5.axvspan(-0.4, 0.4, alpha=0.2, color='green')
+ax5.text(0, max(sn_comparison)*0.7, 'Our Scheme\n(15-67% savings)', ha='center', fontsize=10, fontweight='bold',
+         bbox=dict(boxstyle="round,pad=0.3", facecolor="yellow", edgecolor="orange", alpha=0.7))
+
+# 6. Energy efficiency metrics
+ax6 = axes[1, 2]
+efficiency_metrics = ['Energy per Auth', 'Daily Usage\n(100 auth)', 'Battery Life\nImpact', 'Years per Charge']
+md_efficiency = [82.2, 8.22, 0.000046, 598]  # µJ, mJ, %, years
+sn_efficiency = [1410.2, 141.02, 0.00078, 35]  # µJ, mJ, %, years
+
+x_eff = np.arange(len(efficiency_metrics))
+bars_md_eff = ax6.bar(x_eff - 0.2, md_efficiency, 0.4, label='Mobile Device', color='#4A90E2', edgecolor='black')
+bars_sn_eff = ax6.bar(x_eff + 0.2, sn_efficiency, 0.4, label='Sensor Node', color='#FF6B6B', edgecolor='black')
+
+ax6.set_title('Practical Energy Efficiency Metrics', fontsize=14, fontweight='bold', pad=15)
+ax6.set_xlabel('Metric', fontsize=12)
+ax6.set_ylabel('Value (log scale)', fontsize=12)
+ax6.set_xticks(x_eff)
+ax6.set_xticklabels(efficiency_metrics)
+ax6.legend()
+ax6.grid(axis='y', alpha=0.3, linestyle='--')
+ax6.set_yscale('log')
+
+# Annotate with units
+units = ['µJ', 'mJ', '%', 'years']
+for i, (md_val, sn_val, unit) in enumerate(zip(md_efficiency, sn_efficiency, units)):
+    ax6.text(x_eff[i] - 0.2, md_val*1.5, f'{md_val}\n{unit}', ha='center', va='bottom', fontsize=8)
+    ax6.text(x_eff[i] + 0.2, sn_val*1.5, f'{sn_val}\n{unit}', ha='center', va='bottom', fontsize=8)
+
+plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+
+# Add summary statistics
+summary_text = """Energy Efficiency Summary:
+• Total protocol energy: 1666.3 µJ per session
+• SN (battery-powered): 1410.2 µJ (98.8% computation)
+• MD: 82.2 µJ (80.3% computation)
+• GWN: 173.9 µJ (88.0% computation)
+• Battery life: 35+ years for SN, 598+ years for MD
+• Energy savings: 15-67% vs related schemes"""

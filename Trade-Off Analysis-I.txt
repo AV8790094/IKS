@@ -1,0 +1,89 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Data from your table
+schemes = ['[29]', '[30]', '[31]', '[32]', 'Proposed']
+energy_per_auth = [4.28, 9.20, 7.08, 3.20, 3.00]  # mJ
+response_rate = [5, 2, 5, 9, 12]  # Auth/Sec
+latency = [333, 1000, 500, 167, 125]  # ms
+
+# Calculate the trade-off score as per your formula
+# Score = (R/EAuth) × 10
+scores = [(r/e) * 10 for r, e in zip(response_rate, energy_per_auth)]
+
+# Create figure with two subplots
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+
+# Plot 1: Energy vs Response Rate (Scatter plot)
+colors = plt.cm.Set1(np.linspace(0, 1, len(schemes)))
+scatter = ax1.scatter(energy_per_auth, response_rate, s=300, c=colors, alpha=0.8, edgecolors='black', linewidth=2)
+
+# Add labels for each point
+for i, scheme in enumerate(schemes):
+    ax1.annotate(scheme, (energy_per_auth[i], response_rate[i]),
+                 xytext=(10, 10), textcoords='offset points',
+                 fontsize=10, fontweight='bold')
+
+# Customize first plot
+ax1.set_xlabel('Energy Consumption per Authentication (mJ)', fontsize=12, fontweight='bold')
+ax1.set_ylabel('Response Rate (Auth/Sec)', fontsize=12, fontweight='bold')
+ax1.set_title('Energy vs Response Rate Trade-off', fontsize=14, fontweight='bold')
+ax1.grid(True, alpha=0.3)
+ax1.set_xlim(2.5, 10)
+ax1.set_ylim(0, 14)
+
+# Add performance indicator arrows
+ax1.annotate('Better', xy=(2.5, 13), xytext=(3, 13),
+             arrowprops=dict(arrowstyle='->', lw=2, color='green'),
+             fontsize=10, color='green', fontweight='bold')
+ax1.annotate('Worse', xy=(9.5, 1), xytext=(9, 1),
+             arrowprops=dict(arrowstyle='->', lw=2, color='red'),
+             fontsize=10, color='red', fontweight='bold')
+
+# Add trade-off curve (pareto frontier)
+# Sort by energy for pareto frontier
+sorted_indices = np.argsort(energy_per_auth)
+pareto_energy = [energy_per_auth[i] for i in sorted_indices]
+pareto_response = [response_rate[i] for i in sorted_indices]
+
+# Keep only non-dominated points
+pareto_points = []
+for i in range(len(pareto_energy)):
+    is_dominated = False
+    for j in range(len(pareto_energy)):
+        if i != j and pareto_energy[j] <= pareto_energy[i] and pareto_response[j] >= pareto_response[i]:
+            is_dominated = True
+            break
+    if not is_dominated:
+        pareto_points.append(i)
+
+pareto_energy_final = [pareto_energy[i] for i in pareto_points]
+pareto_response_final = [pareto_response[i] for i in pareto_points]
+
+# Sort for plotting
+pareto_sorted = sorted(zip(pareto_energy_final, pareto_response_final))
+pareto_energy_plot, pareto_response_plot = zip(*pareto_sorted) if pareto_sorted else ([], [])
+
+if len(pareto_energy_plot) > 1:
+    ax1.plot(pareto_energy_plot, pareto_response_plot, 'r--', alpha=0.7, linewidth=2, label='Pareto Frontier')
+    ax1.legend()
+
+# Plot 2: Bar chart for Trade-off Score
+bars = ax2.bar(schemes, scores, color=colors, edgecolor='black', linewidth=2)
+
+# Add value labels on top of bars
+for bar, score in zip(bars, scores):
+    height = bar.get_height()
+    ax2.text(bar.get_x() + bar.get_width()/2., height + 0.5,
+             f'{score:.1f}', ha='center', va='bottom', fontweight='bold')
+
+# Customize second plot
+ax2.set_xlabel('Schemes', fontsize=12, fontweight='bold')
+ax2.set_ylabel('Trade-off Score (R/Eauth × 10)', fontsize=12, fontweight='bold')
+ax2.set_title('Trade-off Score Comparison', fontsize=14, fontweight='bold')
+ax2.grid(True, alpha=0.3, axis='y')
+ax2.set_ylim(0, max(scores) + 10)
+
+# Highlight the proposed scheme
+ax2.patches[-1].set_hatch('//')
+ax2.patches[-1].set_edgecolor('red')

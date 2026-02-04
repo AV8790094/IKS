@@ -1,0 +1,55 @@
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from matplotlib import cm
+
+# Data from Table 6
+data = {
+    'Scheme': ['[29]', '[30]', '[31]', '[32]', 'Proposed'],
+    'Latency': [333, 1000, 500, 167, 125],  # in ms
+    'Throughput': [5, 2, 5, 9, 12],  # auth/sec
+    'No. of Devices': [40, 15, 30, 80, 100],
+    'Throughput/Latency': [0.015, 0.002, 0.010, 0.054, 0.096]
+}
+
+df = pd.DataFrame(data)
+
+# Calculate trade-off values
+# Using the formula: Trade-Off = (Throughput × 1000)/(Latency)^2
+df['Trade-Off'] = (df['Throughput'] * 1000) / (df['Latency'] ** 2)
+
+# Create figure with multiple subplots
+fig = plt.figure(figsize=(16, 10))
+
+# 1. Scatter plot: Latency vs Throughput
+ax1 = plt.subplot(2, 2, 1)
+colors = cm.viridis(np.linspace(0, 1, len(df)))
+scatter = ax1.scatter(df['Latency'], df['Throughput'],
+                     s=df['No. of Devices']*5,  # Bubble size based on number of devices
+                     c=colors, alpha=0.7, edgecolors='black', linewidth=1)
+
+# Add labels for each point
+for i, row in df.iterrows():
+    ax1.annotate(row['Scheme'], (row['Latency'], row['Throughput']),
+                xytext=(5, 5), textcoords='offset points', fontsize=10)
+
+ax1.set_xlabel('Latency (ms)', fontsize=12, fontweight='bold')
+ax1.set_ylabel('Throughput (auth/sec)', fontsize=12, fontweight='bold')
+ax1.set_title('Latency vs Throughput (Bubble size = No. of Devices)', fontsize=14, fontweight='bold')
+ax1.grid(True, alpha=0.3)
+ax1.set_xlim(0, max(df['Latency']) * 1.1)
+ax1.set_ylim(0, max(df['Throughput']) * 1.2)
+
+# 2. Bar chart: Throughput/Latency ratio
+ax2 = plt.subplot(2, 2, 2)
+bars = ax2.bar(df['Scheme'], df['Throughput/Latency'], color=colors)
+ax2.set_xlabel('Scheme', fontsize=12, fontweight='bold')
+ax2.set_ylabel('Throughput/Latency Ratio', fontsize=12, fontweight='bold')
+ax2.set_title('Throughput/Latency Ratio Comparison', fontsize=14, fontweight='bold')
+ax2.grid(True, alpha=0.3, axis='y')
+
+# Add value labels on bars
+for bar in bars:
+    height = bar.get_height()
+    ax2.text(bar.get_x() + bar.get_width()/2., height + 0.001,
+             f'{height:.3f}', ha='center', va='bottom', fontsize=10)

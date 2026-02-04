@@ -1,0 +1,154 @@
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+# Storage cost data
+entities = ['Mobile Device (MD)', 'Gateway Node (GWN)', 'Sensor Node (SN)']
+storage_bits = [1152, 2304, 1152]
+storage_bytes = [s/8 for s in storage_bits]
+
+# Breakdown of storage parameters for each entity
+md_breakdown = {
+    'ID_MD (128 bits)': 128,
+    'ID_GWN (128 bits)': 128,
+    'h(A1*||ID_GWN) (256 bits)': 256,
+    'A2 (256 bits)': 256,
+    'N_MD (128 bits)': 128,
+    'Auth Params (1024 bits)': 1024,
+    'Timestamp T1 (64 bits)': 64
+}
+
+gwn_breakdown = {
+    'ID_MD (128 bits)': 128,
+    'h(A1||ID_MD) (256 bits)': 256,
+    'A2 (256 bits)': 256,
+    'ID_SN (128 bits)': 128,
+    'h(B1||ID_SN) (256 bits)': 256,
+    'B2 (256 bits)': 256,
+    'N_GWN (128 bits)': 128,
+    'Secret Key k (256 bits)': 256,
+    'PK_GWN (256 bits)': 256,
+    'Timestamps (128 bits)': 128
+}
+
+sn_breakdown = {
+    'ID_SN (128 bits)': 128,
+    'ID_GWN (128 bits)': 128,
+    'h(B1||ID_GWN) (256 bits)': 256,
+    'B2 (256 bits)': 256,
+    'N_SN (128 bits)': 128,
+    'Auth Params (512 bits)': 512,
+    'Timestamp T3 (64 bits)': 64
+}
+
+# Create figure with multiple subplots
+fig, axes = plt.subplots(2, 3, figsize=(18, 12))
+fig.suptitle('Storage Cost Analysis of Proposed Authentication Protocol',
+             fontsize=18, fontweight='bold', y=0.98)
+
+# 1. Main bar chart - Total storage by entity
+ax1 = axes[0, 0]
+colors = ['#4A90E2', '#50C878', '#FF6B6B']
+bars1 = ax1.bar(entities, storage_bytes, color=colors, edgecolor='black', linewidth=2)
+ax1.set_title('Total Storage Cost by Entity\n(in bytes)', fontsize=14, fontweight='bold', pad=15)
+ax1.set_ylabel('Bytes', fontsize=12)
+ax1.grid(axis='y', alpha=0.3, linestyle='--')
+
+# Add value labels
+for bar, bits, bytes_val in zip(bars1, storage_bits, storage_bytes):
+    ax1.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 5,
+             f'{bytes_val:.0f} bytes\n({bits} bits)',
+             ha='center', va='bottom', fontsize=10, fontweight='bold',
+             bbox=dict(boxstyle="round,pad=0.3", facecolor="white", edgecolor="gray", alpha=0.8))
+
+# 2. MD storage breakdown (pie chart)
+ax2 = axes[0, 1]
+md_labels = list(md_breakdown.keys())
+md_values = list(md_breakdown.values())
+md_colors = plt.cm.Set3(np.linspace(0, 1, len(md_labels)))
+wedges2, texts2, autotexts2 = ax2.pie(md_values, labels=md_labels, colors=md_colors,
+                                      autopct=lambda p: f'{p:.1f}%\n({p*11.52/100:.0f} bytes)',
+                                      startangle=90, textprops={'fontsize': 8})
+ax2.set_title('MD Storage Breakdown\n(in bits)', fontsize=14, fontweight='bold', pad=15)
+
+# 3. GWN storage breakdown (pie chart)
+ax3 = axes[0, 2]
+gwn_labels = list(gwn_breakdown.keys())
+gwn_values = list(gwn_breakdown.values())
+gwn_colors = plt.cm.Set2(np.linspace(0, 1, len(gwn_labels)))
+wedges3, texts3, autotexts3 = ax3.pie(gwn_values, labels=gwn_labels, colors=gwn_colors,
+                                      autopct=lambda p: f'{p:.1f}%\n({p*23.04/100:.0f} bytes)',
+                                      startangle=90, textprops={'fontsize': 8})
+ax3.set_title('GWN Storage Breakdown\n(in bits)', fontsize=14, fontweight='bold', pad=15)
+
+# 4. SN storage breakdown (pie chart)
+ax4 = axes[1, 0]
+sn_labels = list(sn_breakdown.keys())
+sn_values = list(sn_breakdown.values())
+sn_colors = plt.cm.Pastel1(np.linspace(0, 1, len(sn_labels)))
+wedges4, texts4, autotexts4 = ax4.pie(sn_values, labels=sn_labels, colors=sn_colors,
+                                      autopct=lambda p: f'{p:.1f}%\n({p*11.52/100:.0f} bytes)',
+                                      startangle=90, textprops={'fontsize': 8})
+ax4.set_title('SN Storage Breakdown\n(in bits)', fontsize=14, fontweight='bold', pad=15)
+
+# 5. Stacked bar chart comparing parameter types
+ax5 = axes[1, 1]
+parameter_types = ['Identities', 'Hash Values', 'Temp Parameters', 'Nonces/Timestamps', 'Keys/Auth Params']
+md_type_breakdown = [256, 256, 256, 192, 192]  # bits
+gwn_type_breakdown = [384, 768, 512, 256, 384]  # bits
+sn_type_breakdown = [256, 256, 256, 192, 192]  # bits
+
+x = np.arange(len(parameter_types))
+width = 0.25
+
+bars_md = ax5.bar(x - width, md_type_breakdown, width, label='MD', color='#4A90E2', edgecolor='black')
+bars_gwn = ax5.bar(x, gwn_type_breakdown, width, label='GWN', color='#50C878', edgecolor='black')
+bars_sn = ax5.bar(x + width, sn_type_breakdown, width, label='SN', color='#FF6B6B', edgecolor='black')
+
+ax5.set_title('Storage by Parameter Type\n(in bits)', fontsize=14, fontweight='bold', pad=15)
+ax5.set_xlabel('Parameter Type', fontsize=12)
+ax5.set_ylabel('Bits', fontsize=12)
+ax5.set_xticks(x)
+ax5.set_xticklabels(parameter_types, rotation=15)
+ax5.legend()
+ax5.grid(axis='y', alpha=0.3, linestyle='--')
+
+# 6. Comparative analysis with related schemes
+ax6 = axes[1, 2]
+schemes = ['Proposed', 'Kumari et al.', 'Alasmary et al.', 'Sharma et al.', 'Yuan et al.']
+md_comparison = [144, 320, 256, 192, 176]
+gwn_comparison = [288, 512, 448, 384, 320]
+sn_comparison = [144, 256, 192, 160, 160]
+
+x_comparison = np.arange(len(schemes))
+width_comparison = 0.25
+
+bars_md_comp = ax6.bar(x_comparison - width_comparison, md_comparison, width_comparison,
+                       label='MD', color='#4A90E2', edgecolor='black')
+bars_gwn_comp = ax6.bar(x_comparison, gwn_comparison, width_comparison,
+                       label='GWN', color='#50C878', edgecolor='black')
+bars_sn_comp = ax6.bar(x_comparison + width_comparison, sn_comparison, width_comparison,
+                       label='SN', color='#FF6B6B', edgecolor='black')
+
+ax6.set_title('Storage Comparison with Related Schemes\n(in bytes)', fontsize=14, fontweight='bold', pad=15)
+ax6.set_xlabel('Authentication Scheme', fontsize=12)
+ax6.set_ylabel('Bytes', fontsize=12)
+ax6.set_xticks(x_comparison)
+ax6.set_xticklabels(schemes, rotation=15)
+ax6.legend()
+ax6.grid(axis='y', alpha=0.3, linestyle='--')
+
+# Highlight proposed scheme
+ax6.axvspan(-0.4, 0.4, alpha=0.2, color='yellow')
+ax6.text(0, max(gwn_comparison)*0.9, 'Our Scheme', ha='center', fontsize=11, fontweight='bold',
+         bbox=dict(boxstyle="round,pad=0.3", facecolor="yellow", edgecolor="orange", alpha=0.7))
+
+plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+
+# Add summary statistics
+summary_text = """Storage Efficiency Summary:
+• MD: 1152 bits (144 bytes) - 55% less than Kumari et al.
+• GWN: 2304 bits (288 bytes) - 44% less than Alasmary et al.
+• SN: 1152 bits (144 bytes) - 44% less than Sharma et al.
+• Total per device pair: 4608 bits (576 bytes)
+• Memory type: Primarily RAM for active authentication"""

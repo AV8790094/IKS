@@ -1,0 +1,146 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Communication cost data
+entities = ['Mobile Device (MD)', 'Gateway (GWN)', 'Sensor Node (SN)', 'Total Protocol']
+
+# Communication costs in bits
+md_cost = 1344  # bits
+gwn_cost = 3712  # bits
+sn_cost = 1728  # bits
+total_cost = 6784  # bits
+
+costs_bits = [md_cost, gwn_cost, sn_cost, total_cost]
+
+# Convert to bytes for better readability
+costs_bytes = [c/8 for c in costs_bits]
+
+# Breakdown of messages for each entity
+md_breakdown = {
+    'Registration (I_MD, ID_MD)': 256,
+    'Auth (A4,A5,B4,B5,C1,C2,T1)': 1088
+}
+
+gwn_breakdown = {
+    'To MD (Reg: A1-A8, N_GWN)': 2176,
+    'To SN (Reg: B1,B2,B4,B5,B6,PK_SN)': 1536,
+    'Auth (D1-D4,T2 & F3,D1,D2,D4,T4)': 1088
+}
+
+sn_breakdown = {
+    'Registration (I_SN, ID_SN)': 256,
+    'Auth (E3,D1,D2,D4,T3)': 1088
+}
+
+# Create figure with multiple subplots
+fig = plt.figure(figsize=(18, 10))
+
+# Main bar chart - Total communication cost by entity
+ax1 = plt.subplot(2, 3, 1)
+colors1 = ['#4A90E2', '#50C878', '#FF6B6B', '#FFD700']
+bars1 = ax1.bar(entities, costs_bits, color=colors1, edgecolor='black', linewidth=1.5)
+ax1.set_title('Total Communication Cost by Entity\n(in bits)', fontsize=14, fontweight='bold', pad=15)
+ax1.set_ylabel('Bits', fontsize=12)
+ax1.set_xlabel('Entity', fontsize=12)
+ax1.grid(axis='y', alpha=0.3, linestyle='--')
+
+# Add value labels on bars
+for i, (bar, cost_bit, cost_byte) in enumerate(zip(bars1, costs_bits, costs_bytes)):
+    ax1.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 50,
+             f'{cost_bit} bits\n({cost_byte:.0f} bytes)',
+             ha='center', va='bottom', fontsize=10, fontweight='bold',
+             bbox=dict(boxstyle="round,pad=0.3", facecolor="white", edgecolor="gray", alpha=0.8))
+
+# Bar chart in bytes
+ax2 = plt.subplot(2, 3, 2)
+bars2 = ax2.bar(entities[:-1], costs_bytes[:-1], color=colors1[:-1], edgecolor='black', linewidth=1.5)
+ax2.set_title('Communication Cost in Bytes\n(Excluding Total)', fontsize=14, fontweight='bold', pad=15)
+ax2.set_ylabel('Bytes', fontsize=12)
+ax2.set_xlabel('Entity', fontsize=12)
+ax2.grid(axis='y', alpha=0.3, linestyle='--')
+
+for bar, cost_byte in zip(bars2, costs_bytes[:-1]):
+    ax2.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 10,
+             f'{cost_byte:.0f} bytes',
+             ha='center', va='bottom', fontsize=10, fontweight='bold')
+
+# MD breakdown (stacked bar)
+ax3 = plt.subplot(2, 3, 3)
+md_labels = list(md_breakdown.keys())
+md_values = list(md_breakdown.values())
+colors_md = ['#6C8EBF', '#2E59A7']
+bars_md = ax3.bar(md_labels, md_values, color=colors_md, edgecolor='black', linewidth=1.2)
+ax3.set_title('MD Communication Cost Breakdown', fontsize=13, fontweight='bold', pad=12)
+ax3.set_ylabel('Bits', fontsize=11)
+ax3.tick_params(axis='x', rotation=15)
+ax3.grid(axis='y', alpha=0.3, linestyle='--')
+
+for bar, val in zip(bars_md, md_values):
+    ax3.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 20,
+             f'{val} bits', ha='center', va='bottom', fontsize=9, fontweight='bold')
+
+# GWN breakdown (stacked bar)
+ax4 = plt.subplot(2, 3, 4)
+gwn_labels = list(gwn_breakdown.keys())
+gwn_values = list(gwn_breakdown.values())
+colors_gwn = ['#79C900', '#4C8C00', '#2C5F00']
+bars_gwn = ax4.bar(gwn_labels, gwn_values, color=colors_gwn, edgecolor='black', linewidth=1.2)
+ax4.set_title('GWN Communication Cost Breakdown', fontsize=13, fontweight='bold', pad=12)
+ax4.set_ylabel('Bits', fontsize=11)
+ax4.tick_params(axis='x', rotation=15)
+ax4.grid(axis='y', alpha=0.3, linestyle='--')
+
+for bar, val in zip(bars_gwn, gwn_values):
+    ax4.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 20,
+             f'{val} bits', ha='center', va='bottom', fontsize=9, fontweight='bold')
+
+# SN breakdown (stacked bar)
+ax5 = plt.subplot(2, 3, 5)
+sn_labels = list(sn_breakdown.keys())
+sn_values = list(sn_breakdown.values())
+colors_sn = ['#FF9999', '#FF6666']
+bars_sn = ax5.bar(sn_labels, sn_values, color=colors_sn, edgecolor='black', linewidth=1.2)
+ax5.set_title('SN Communication Cost Breakdown', fontsize=13, fontweight='bold', pad=12)
+ax5.set_ylabel('Bits', fontsize=11)
+ax5.tick_params(axis='x', rotation=15)
+ax5.grid(axis='y', alpha=0.3, linestyle='--')
+
+for bar, val in zip(bars_sn, sn_values):
+    ax5.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 20,
+             f'{val} bits', ha='center', va='bottom', fontsize=9, fontweight='bold')
+
+# Pie chart - Protocol phase distribution
+ax6 = plt.subplot(2, 3, 6)
+phase_labels = ['Registration Phase', 'Authentication Phase']
+phase_costs = [md_breakdown['Registration (I_MD, ID_MD)'] +
+               sn_breakdown['Registration (I_SN, ID_SN)'] +
+               gwn_breakdown['To MD (Reg: A1-A8, N_GWN)'] +
+               gwn_breakdown['To SN (Reg: B1,B2,B4,B5,B6,PK_SN)'],
+               md_breakdown['Auth (A4,A5,B4,B5,C1,C2,T1)'] +
+               sn_breakdown['Auth (E3,D1,D2,D4,T3)'] +
+               gwn_breakdown['Auth (D1-D4,T2 & F3,D1,D2,D4,T4)']]
+phase_colors = ['#FFD166', '#EF476F']
+wedges, texts, autotexts = ax6.pie(phase_costs, labels=phase_labels, colors=phase_colors,
+                                    autopct='%1.1f%%', startangle=90,
+                                    textprops={'fontsize': 11})
+ax6.set_title('Cost Distribution by Protocol Phase\n(in bits)', fontsize=13, fontweight='bold', pad=15)
+
+# Format pie chart percentages
+for autotext in autotexts:
+    autotext.set_color('white')
+    autotext.set_fontweight('bold')
+
+# Add overall summary
+fig.suptitle('Communication Cost Analysis of Proposed Authentication Protocol',
+             fontsize=16, fontweight='bold', y=0.98)
+
+# Add statistics box
+stats_text = f"""Protocol Communication Summary:
+• Total: {total_cost} bits ({total_cost/8:.0f} bytes)
+• Registration: {phase_costs[0]} bits ({phase_costs[0]/8:.0f} bytes)
+• Authentication: {phase_costs[1]} bits ({phase_costs[1]/8:.0f} bytes)
+• Average per message: {total_cost/6:.0f} bits ({total_cost/(6*8):.0f} bytes)
+• Efficiency: {total_cost/8:.0f} bytes per session"""
+
+fig.text(0.02, 0.02, stats_text, fontsize=10, fontfamily='monospace',
+         bbox=dict(boxstyle="round,pad=0.5", facecolor="#F0F0F0", edgecolor="gray"))

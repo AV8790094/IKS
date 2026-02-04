@@ -1,0 +1,123 @@
+free Pch: channel.
+free Sch1: channel [private].
+free Sch2: channel [private].
+(*=======SESSION KEYS=======*)
+free sku: bitstring [private].
+free sks: bitstring [private].
+free skg: bitstring [private].
+(*=======GATEWAY SECRETE KEY=======*)
+free Gj: bitstring [private].
+(*=======CONSTANTS=======*)
+free IDi: bitstring [private].
+free PWi: bitstring [private].
+const SIDk: bitstring.
+const GIDj: bitstring.
+const NI: bitstring.
+table d(bitstring).
+(*=======FUNCTIONS=======*)
+fun h(bitstring):bitstring.
+fun xor(bitstring,bitstring):bitstring.
+fun con(bitstring,bitstring):bitstring.
+(*=======EQUATIONS=======*)
+equation forall m:bitstring,n:bitstring;
+xor(xor(m,n),n)=m.
+(*=======QUERIES=======*)
+query attacker(sku).
+query attacker(sks).
+query attacker(skg).
+query id:bitstring; inj-event(UserAuth(id))==> inj-event(UserStart(id)).
+(*=======EVENTS=======*)
+event UserStart(bitstring).
+event UserAuth(bitstring).
+(*=======USER SIDE COMPUTATIONS=======*)
+let User=
+new r0:bitstring;
+let HPWi=h(con(PWi,r0)) in
+out(Sch1,(IDi,HPWi));
+in(Sch1,(A1:bitstring,A2:bitstring,CIDi:bitstring));
+let A3=xor(h(con(IDi,PWi)),r0) in
+!
+(
+event UserStart(IDi);
+new uru:bitstring;
+let ur0=xor(A3,h(con(IDi,PWi))) in
+let uHPWi=h(con(PWi,ur0)) in
+let uB1=xor(A1,uHPWi) in
+let uB2=xor(uB1,uru) in
+let uB3=xor(IDi,h(con(uru,uB1))) in
+let uB4=h(con(con(con(con(con(CIDi,GIDj),SIDk),uB1),IDi), uru)) in
+let M1=(CIDi,uB2, uB3,uB4) in
+out(Pch,M1);
+in(Pch,(uB10:bitstring,uB11:bitstring,uB12:bitstring,uB13:bitstring,uB14:bitstring));
+let urg=xor(uB11,h(con(uru,IDi))) in
+let urs=xor(uB12,h(con(uru,urg))) in
+let sku=h(con(con(uru,urg),urs)) in
+let CIDinew=xor(uB13,h(con(xor(A2,h(con(IDi,uHPWi))),urs))) in
+if uB14=h((con(con(sku,IDi),uB10),CIDinew)) then
+let A1new=xor(xor(uB10,h(con(uru,CIDi))),uHPWi) in
+let A1=A1new in
+let CIDi=CIDinew in
+0
+).
+(*=======SENSOR SIDE COMPUTATIONS=======*)
+let Sensor=
+in(Sch2,SGk:bitstring);
+!
+(
+in(Pch,(sB5:bitstring,sB6:bitstring,sB7:bitstring));
+new srs:bitstring;
+let sru=xor(sB5,h(con(SGk,GIDj))) in
+let srg=xor(sB6,h(sru)) in
+if sB7=h(con(con(SGk,sru),srg)) then
+let sks=h(con(con(sru,srg),srs))in
+let B8=xor(h(con(SGk,srg)),srs) in
+let B9=h(con(con(con(sks,SIDk),GIDj),srs)) in
+let M3=(B8,B9) in
+out(Pch,M3);
+0
+).
+(*=======GATEWAY SIDE COMPUTATIONS=======*)
+let GWReg1=
+in(Sch1,(gIDi:bitstring,gHPWi:bitstring));
+new gCIDi:bitstring;
+let gA1=xor(h(con(con(gCIDi,GIDj),Gj)),gHPWi) in
+let gA2=xor(h(con(gIDi,Gj)),h(con(gIDi,gHPWi))) in
+insert d(gIDi);
+out(Sch1,(gA1,gA2,gCIDi)).
+let GWReg2=
+let gSGk=h(con(con(SIDk,Gj),NI)) in
+out(Sch2,gSGk).
+let GWAuth=
+in(Pch,(gCIDi2:bitstring,gB2:bitstring,gB3:bitstring,gB4:bitstring));
+!
+(
+new grg: bitstring;
+let gB1=h(con(con(gCIDi2,GIDj),Gj)) in
+let gru=xor(gB1,gB2) in
+let gIDi2=xor(gB3,h(con(gru,gB1))) in
+get d(=gIDi2) in
+let gru=xor(gB3,gIDi2) in
+if gB4=h(con(con(con(con(con(gCIDi2,GIDj),SIDk),gB1),gIDi2),gru)) then
+event UserAuth(gIDi2);
+let gSGk=h(con(con(SIDk,Gj),NI)) in
+let gB5=xor(h(con(gSGk,GIDj)),gru) in
+let gB6=xor(h(gru),grg) in
+let gB7=h(con(con(gSGk,gru),grg)) in
+let M2=(gB5, gB6, gB7) in
+out(Pch,M2);
+in(Pch,(gB8:bitstring,gB9:bitstring));
+new gCIDinew:bitstring;
+let grs=xor(gB8,h(con(gSGk,grg))) in
+let skg=h(con(con(gru,grg),grs))in
+if gB9=h((con(con(skg,SIDk),GIDj),grs)) then
+let gB10=xor(h(con(con(gCIDinew,GIDj),Gj)),h(con(gru,gCIDi2))) in
+let gB11=xor(h(con(gru,gIDi2)),grg) in
+let gB12=xor(h(con(gru,grg)),grs) in
+let gB13=xor(h(con(h(con(gIDi2,Gj)),grs)),gCIDinew) in
+let gB14=h(con(con(con(skg,gIDi2),gB10),gCIDinew)) in
+let M4=(gB10,gB11,gB12,gB13,gB14) in
+out(Pch,M4);
+0
+).
+let GW=GWReg1|GWReg2|GWAuth.
+process (!User|!GW|!Sensor)
